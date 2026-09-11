@@ -61,6 +61,7 @@ const Interview = () => {
     const [ activeNav, setActiveNav ] = useState('technical')
     const { report, getReportById, loading, getResumePdf } = useInterview()
     const { interviewId } = useParams()
+    const navigate = useNavigate()
 
     useEffect(() => {
         if (interviewId) {
@@ -91,6 +92,12 @@ const Interview = () => {
                 <nav className='interview-nav'>
                     <div className="nav-content">
                         <p className='interview-nav__label'>Sections</p>
+                        <button
+                            type='button'
+                            onClick={() => navigate('/')}
+                            className='interview-nav__item'>
+                            ← Back to Upload
+                        </button>
                         {NAV_ITEMS.map(item => (
                             <button
                                 key={item.id}
