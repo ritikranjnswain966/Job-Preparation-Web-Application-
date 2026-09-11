@@ -1,7 +1,13 @@
 const { GoogleGenAI } = require("@google/genai")
 const { z } = require("zod")
 const { zodToJsonSchema } = require("zod-to-json-schema")
-const puppeteer = require("puppeteer")
+const { execFile } = require("child_process")
+const { promisify } = require("util")
+const fs = require("fs/promises")
+const os = require("os")
+const path = require("path")
+
+const execFileAsync = promisify(execFile)
 
 const ai = new GoogleGenAI({
     apiKey: process.env.GOOGLE_GENAI_API_KEY
@@ -58,22 +64,25 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
 
 
 async function generatePdfFromHtml(htmlContent) {
-    const browser = await puppeteer.launch()
-    const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" })
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "resume-pdf-"))
+    const htmlPath = path.join(tempDir, "resume.html")
+    const pdfPath = path.join(tempDir, "resume.pdf")
+    const chromePath = process.env.CHROME_PATH || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
 
-    const pdfBuffer = await page.pdf({
-        format: "A4", margin: {
-            top: "20mm",
-            bottom: "20mm",
-            left: "15mm",
-            right: "15mm"
-        }
-    })
+    try {
+        await fs.writeFile(htmlPath, htmlContent, "utf8")
+        await execFileAsync(chromePath, [
+            "--headless=new",
+            "--disable-gpu",
+            "--no-pdf-header-footer",
+            `--print-to-pdf=${pdfPath}`,
+            `file:///${htmlPath.replace(/\\/g, "/")}`
+        ], { windowsHide: true })
 
-    await browser.close()
-
-    return pdfBuffer
+        return await fs.readFile(pdfPath)
+    } finally {
+        await fs.rm(tempDir, { recursive: true, force: true })
+    }
 }
 
 async function generateResumePdf({ resume, selfDescription, jobDescription }) {
