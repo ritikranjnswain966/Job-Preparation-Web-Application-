@@ -3,11 +3,12 @@ const cookieParser = require("cookie-parser")
 const cors = require("cors")
 
 const app = express()
+const allowedOrigins = [ "http://localhost:5173", process.env.CLIENT_URL ].filter(Boolean)
 
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true
 }))
 
@@ -18,6 +19,10 @@ const interviewRouter = require("./routes/interview.routes")
 
 
 /* using all the routes here */
+app.get("/", (req, res) => {
+    res.status(200).json({ message: "Job Preparation API is running." })
+})
+
 app.use("/api/auth", authRouter)
 app.use("/api/interview", interviewRouter)
 
