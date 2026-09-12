@@ -13,57 +13,60 @@ export const useInterview = () => {
         throw new Error("useInterview must be used within an InterviewProvider")
     }
 
-    const { loading, setLoading, report, setReport, reports, setReports } = context
+    const { loading, setLoading, report, setReport, reports, setReports, error, setError } = context
+
+    const getErrorMessage = (requestError) => requestError.response?.data?.message || "Unable to complete that request. Please try again."
 
     const generateReport = async ({ jobDescription, selfDescription, resumeFile }) => {
         setLoading(true)
-        let response = null
+        setError("")
         try {
-            response = await generateInterviewReport({ jobDescription, selfDescription, resumeFile })
+            const response = await generateInterviewReport({ jobDescription, selfDescription, resumeFile })
             setReport(response.interviewReport)
+            return response.interviewReport
         } catch (error) {
-            console.log(error)
+            setError(getErrorMessage(error))
+            throw error
         } finally {
             setLoading(false)
         }
-
-        return response.interviewReport
     }
 
     const getReportById = async (interviewId) => {
         setLoading(true)
-        let response = null
+        setError("")
         try {
-            response = await getInterviewReportById(interviewId)
+            const response = await getInterviewReportById(interviewId)
             setReport(response.interviewReport)
+            return response.interviewReport
         } catch (error) {
-            console.log(error)
+            setError(getErrorMessage(error))
+            return null
         } finally {
             setLoading(false)
         }
-        return response.interviewReport
     }
 
     const getReports = async () => {
         setLoading(true)
-        let response = null
+        setError("")
         try {
-            response = await getAllInterviewReports()
+            const response = await getAllInterviewReports()
             setReports(response.interviewReports)
+            return response.interviewReports
         } catch (error) {
-            console.log(error)
+            setError(getErrorMessage(error))
+            return []
         } finally {
             setLoading(false)
         }
-
-        return response.interviewReports
     }
 
     const getResumePdf = async (interviewReportId) => {
         setLoading(true)
-        let response = null
+        setError("")
         try {
-            response = await generateResumePdf({ interviewReportId })
+            const response = await generateResumePdf({ interviewReportId })
             const url = window.URL.createObjectURL(new Blob([ response ], { type: "application/pdf" }))
             const link = document.createElement("a")
             link.href = url
@@ -72,7 +75,7 @@ export const useInterview = () => {
             link.click()
         }
         catch (error) {
-            console.log(error)
+            setError(getErrorMessage(error))
         } finally {
             setLoading(false)
         }
@@ -86,6 +89,6 @@ export const useInterview = () => {
         }
     }, [ interviewId ])
 
-    return { loading, report, reports, generateReport, getReportById, getReports, getResumePdf }
+    return { loading, report, reports, error, generateReport, getReportById, getReports, getResumePdf }
 
 }

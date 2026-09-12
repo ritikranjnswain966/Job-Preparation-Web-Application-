@@ -7,16 +7,20 @@ import { login, register, logout, getMe } from "../services/auth.api";
 export const useAuth = () => {
 
     const context = useContext(AuthContext)
-    const { user, setUser, loading, setLoading } = context
+    const { user, setUser, loading, setLoading, error, setError } = context
+    const getErrorMessage = (requestError) => requestError.response?.data?.message || "Unable to reach the server. Please try again."
 
 
     const handleLogin = async ({ email, password }) => {
         setLoading(true)
+        setError("")
         try {
             const data = await login({ email, password })
             setUser(data.user)
-        } catch (err) {
-
+            return data.user
+        } catch (error) {
+            setError(getErrorMessage(error))
+            return null
         } finally {
             setLoading(false)
         }
@@ -24,11 +28,14 @@ export const useAuth = () => {
 
     const handleRegister = async ({ username, email, password }) => {
         setLoading(true)
+        setError("")
         try {
             const data = await register({ username, email, password })
             setUser(data.user)
-        } catch (err) {
-
+            return data.user
+        } catch (error) {
+            setError(getErrorMessage(error))
+            return null
         } finally {
             setLoading(false)
         }
@@ -36,11 +43,12 @@ export const useAuth = () => {
 
     const handleLogout = async () => {
         setLoading(true)
+        setError("")
         try {
-            const data = await logout()
+            await logout()
             setUser(null)
-        } catch (err) {
-
+        } catch (error) {
+            setError(getErrorMessage(error))
         } finally {
             setLoading(false)
         }
@@ -53,7 +61,9 @@ export const useAuth = () => {
 
                 const data = await getMe()
                 setUser(data.user)
-            } catch (err) { } finally {
+            } catch {
+                setUser(null)
+            } finally {
                 setLoading(false)
             }
         }
@@ -62,5 +72,5 @@ export const useAuth = () => {
 
     }, [])
 
-    return { user, loading, handleRegister, handleLogin, handleLogout }
+    return { user, loading, error, handleRegister, handleLogin, handleLogout }
 }
