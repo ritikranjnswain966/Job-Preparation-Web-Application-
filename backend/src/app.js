@@ -11,10 +11,6 @@ app.use(cors({
     credentials: true
 }))
 
-/* health check route */
-app.get("/", (req, res) => {
-    res.status(200).json({ status: "ok", message: "Job Preparation API is running" })
-})
 
 /* require all the routes here */
 const authRouter = require("./routes/auth.routes")
