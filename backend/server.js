@@ -12,19 +12,19 @@ async function handler(req, res) {
     }
 }
 
-async function startServer() {
-    try {
-        await connectToDB()
-        const port = process.env.PORT || 3000
-        app.listen(port, () => console.log(`Server is running on port ${port}`))
-    } catch (error) {
-        console.error("Server did not start because MongoDB is unavailable.")
-        process.exit(1)
-    }
-}
+// async function startServer() {
+//     try {
+//         await connectToDB()
+//         const port = process.env.PORT || 3000
+//         app.listen(port, () => console.log(`Server is running on port ${port}`))
+//     } catch (error) {
+//         console.error("Server did not start because MongoDB is unavailable.")
+//         process.exit(1)
+//     }
+// }
 
-if (require.main === module) {
-    startServer()
-}
+// if (require.main === module) {
+//     startServer()
+// }
 
 module.exports = handler
