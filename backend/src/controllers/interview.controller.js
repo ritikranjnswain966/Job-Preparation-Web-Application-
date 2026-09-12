@@ -32,19 +32,37 @@ async function generateInterViewReportController(req, res) {
         }
     }
 
-    const interViewReportByAi = await generateInterviewReport({
-        resume,
-        selfDescription: trimmedSelfDescription || "",
-        jobDescription: trimmedJobDescription
-    })
+    let interViewReportByAi
 
-    const interviewReport = await interviewReportModel.create({
-        user: req.user.id,
-        resume,
-        selfDescription: trimmedSelfDescription || "",
-        jobDescription: trimmedJobDescription,
-        ...interViewReportByAi
-    })
+    try {
+        interViewReportByAi = await generateInterviewReport({
+            resume,
+            selfDescription: trimmedSelfDescription || "",
+            jobDescription: trimmedJobDescription
+        })
+    } catch (error) {
+        console.error("AI report generation failed:", error.message)
+        return res.status(502).json({
+            message: "The AI report service could not generate a response. Check the Google AI API key and model access."
+        })
+    }
+
+    let interviewReport
+
+    try {
+        interviewReport = await interviewReportModel.create({
+            user: req.user.id,
+            resume,
+            selfDescription: trimmedSelfDescription || "",
+            jobDescription: trimmedJobDescription,
+            ...interViewReportByAi
+        })
+    } catch (error) {
+        console.error("Saving interview report failed:", error.message)
+        return res.status(503).json({
+            message: "The report was generated but could not be saved because the database is unavailable."
+        })
+    }
 
     res.status(201).json({
         message: "Interview report generated successfully.",
